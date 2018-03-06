@@ -1,135 +1,131 @@
 package com;
 
-import static com.Runner.ITERATION;
+import static com.FileParser.middle;
+import static com.FileParser.width;
 
 public class Trip {
-	private int beginX;
-	private int beginY;
-	private int endX;
-	private int endY;
-	private int earliestStart;
-	private int latestFinish;
-	private boolean isTaken;
-	private boolean isOver=false;
-	private int finishCounter;
-	private Integer number;
-	private Car car;
+    private int beginX;
+    private int beginY;
+    private int endX;
+    private int endY;
+    private int earliestStart;
+    private int latestFinish;
+    private boolean isTaken;
+    private boolean isOver;
+    private int finishCounter;
+    private Integer number;
+    private Car car;
+    private int duration = -1;
 
 
-	public Trip(int beginX, int beginY, int endX, int endY, int earliestStart, int latestFinish, int number) {
-		this.beginX = beginX;
-		this.beginY = beginY;
-		this.endX = endX;
-		this.endY = endY;
-		this.earliestStart = earliestStart;
-		this.latestFinish = latestFinish;
-		this.isTaken = false;
-		this.number=number;
-	}
+    public Trip(int beginX, int beginY, int endX, int endY, int earliestStart, int latestFinish, int number) {
+        this.beginX = beginX;
+        this.beginY = beginY;
+        this.endX = endX;
+        this.endY = endY;
+        this.earliestStart = earliestStart;
+        this.latestFinish = latestFinish;
+        this.isTaken = false;
+        this.number = number;
+        this.isOver = false;
+    }
 
-	public int getDuration(){
-		return Math.abs(beginX-endX)+Math.abs(beginY-endY);
-	}
+    public boolean isOver() {
+        return isOver;
+    }
 
-	public boolean isOver(){
-		return isOver;
-	}
+    public boolean  isTripOptimal(int iterationNumber, Car car) {
+        if(isOver() || isTaken())
+            return false;
 
-	public boolean isTakable(int iterationNumber){
-		return !isOver && iterationNumber >= earliestStart;
-	}
+        int distanceToStart = car.distanceToStart(this);
 
-	public boolean isFinishableAfterCarCame(Car car, int interation){
-		return !isOver && (interation + car.distanceToStart(this)) + getDuration() <= latestFinish;
-	}
+        return  distanceToStart<50
+                &&  isTakableWhenCarCame(distanceToStart, iterationNumber)
+                && isFinishableAfterCarCame(distanceToStart, iterationNumber);
+    }
 
-	public boolean isSkipable(int iterationNumber){
-		return (iterationNumber + getDuration()) > latestFinish;
-	}
+    private boolean isTakableWhenCarCame(int distanceToStart, int iterationNumber) {
+        return (iterationNumber + distanceToStart) >= earliestStart;
+    }
 
-	public int getBeginX() {
-		return beginX;
-	}
+    private boolean isFinishableAfterCarCame(int distanceToStart, int interation) {
+        return distanceToStart + getDuration() <= latestFinish - interation;
+    }
 
-	public void setBeginX(int beginX) {
-		this.beginX = beginX;
-	}
+    public int getDuration() {
+        if (duration == -1)
+            duration = Math.abs(beginX - endX) + Math.abs(beginY - endY);
+        return duration;
+    }
 
-	public void setOver(boolean over) {
-		isOver = over;
-	}
+    public boolean isSkipable(int iterationNumber) {
+        return (iterationNumber + getDuration()) > latestFinish;
+    }
 
-	public void setNumber(Integer number) {
-		this.number = number;
-	}
+    public int getBeginX() {
+        return beginX;
+    }
 
-	public int getBeginY() {
-		return beginY;
-	}
+    public void setBeginX(int beginX) {
+        this.beginX = beginX;
+    }
 
-	public void setBeginY(int beginY) {
-		this.beginY = beginY;
-	}
+    public void setOver(boolean over) {
+        isOver = over;
+    }
 
-	public int getEndX() {
-		return endX;
-	}
+    public void setNumber(Integer number) {
+        this.number = number;
+    }
 
-	public void setEndX(int endX) {
-		this.endX = endX;
-	}
+    public int getBeginY() {
+        return beginY;
+    }
 
-	public int getEndY() {
-		return endY;
-	}
+    public int getEndX() {
+        return endX;
+    }
 
-	public void setEndY(int endY) {
-		this.endY = endY;
-	}
+    public int getEndY() {
+        return endY;
+    }
 
-	public boolean isTaken() {
-		return isTaken;
-	}
+    public boolean isTaken() {
+        return isTaken;
+    }
 
-	public void setTaken(boolean taken) {
-		isTaken = taken;
-	}
+    public void setTaken(boolean taken) {
+        isTaken = taken;
+    }
 
-	public int getEarliestStart() {
-		return earliestStart;
-	}
+    public int getEarliestStart() {
+        return earliestStart;
+    }
 
-	public void setEarliestStart(int earliestStart) {
-		this.earliestStart = earliestStart;
-	}
+    public int getLatestFinish() {
+        return latestFinish;
+    }
 
-	public int getLatestFinish() {
-		return latestFinish;
-	}
+    public Integer getNumber() {
+        return number;
+    }
 
-	public void setLatestFinish(int latestFinish) {
-		this.latestFinish = latestFinish;
-	}
+    public synchronized  void assignCarToTrip(Car car) {
+        this.setTaken(true);
+        this.car = car;
+        this.car.setBusy(true);
+        finishCounter = this.car.distanceToStart(this) + getDuration();
+    }
 
-	public Integer getNumber() {
-		return number;
-	}
-
-	public void assignCarToTrip(Car car) {
-			this.setTaken(true);
-			this.car = car;
-			this.car.setBusy(true);
-			finishCounter = this.car.distanceToStart(this) + getDuration();
-	}
-
-	public void decreaseFinishCounter() {
-		--finishCounter;
-		if(finishCounter==0){
-			isOver = true;
-			this.car.setBusy(false);
-			this.car.tripFinished(this);
-			this.car.setX(this.getEndX());
-			this.car.setY(this.getEndY());
-		}
-	}
+    public synchronized  void decreaseFinishCounter() {
+        --finishCounter;
+        if (finishCounter == 0) {
+            isOver = true;
+            this.car.setBusy(false);
+            this.car.tripFinished(this);
+            this.car.setX(this.getEndX());
+            this.car.setY(this.getEndY());
+        }
+    }
 }

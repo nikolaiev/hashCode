@@ -61,18 +61,13 @@ public class Car {
 
 	public void findClosesTripAndAssign(List<Trip> trips, int finalCurrIteration) {
 
-		final Trip closestTrip = trips.stream()
-				.filter(trip -> !trip.isOver())
-				.filter(trip -> !trip.isTaken())
-				.filter(trip -> trip.isTakable(finalCurrIteration))
-				.filter(trip->trip.isFinishableAfterCarCame(this,finalCurrIteration))
+		final Trip closestTrip = trips.parallelStream()
+				.filter(trip -> trip.isTripOptimal(finalCurrIteration, this))
 				.min(Comparator.comparingInt(this::earliestFinish))
 				.orElse(null);
 
-		//Runner.trips.remove(closestTrip);
 		if(closestTrip!=null) {
 			closestTrip.assignCarToTrip(this);
-			//System.out.println("car with number "+ carNumber+ "has trip"+closestTrip.getNumber());
 		}
 
 	}
