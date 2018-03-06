@@ -9,7 +9,7 @@ public class Runner {
 	public static List<Trip> trips;
 	public static void main(String[] args) throws IOException {
 		//TODO args
-		final String fileName = "e_high_bonus.in";
+		final String fileName = "b_should_be_easy.in";
 		FileParser parser = new FileParser(fileName);
 
 		trips = parser.getTrips();
